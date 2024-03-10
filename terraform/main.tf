@@ -301,7 +301,7 @@ resource "yandex_compute_instance" "bastion-vm" {
 }*/
 
 #===ansible info====
-resource "local_file" "write_hosts" {
+resource "local_file" "ansible_hosts" {
   content  = <<EOT
 [nginx]
 nginx-1 ansible_host=${yandex_compute_instance.nginx-vm-1.network_interface.0.nat_ip_address}
@@ -327,3 +327,13 @@ ${yandex_compute_instance.kibana-vm.network_interface.0.nat_ip_address}
 ${yandex_compute_instance.bastion-vm.network_interface.0.nat_ip_address}
 */
 
+
+resource "null_resource" "ansible" {
+  provisioner "local-exec" {
+    command = "cd ../ansible && ansible-playbook ../ansible/playbook.yaml"
+  }
+
+  depends_on = [
+    local_file.ansible_hosts
+  ]
+}

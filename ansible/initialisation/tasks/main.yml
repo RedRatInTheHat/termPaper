@@ -1,0 +1,9 @@
+---
+- name: Wait for connection (120 seconds max)
+  wait_for_connection:
+    timeout: 120
+
+- name: Update apt packages
+  become: true
+  apt:
+    update_cache: yes
