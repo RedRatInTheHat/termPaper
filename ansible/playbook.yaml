@@ -1,0 +1,30 @@
+---
+- name: "Create Nginx server"
+  hosts: nginx
+  tasks:
+    - name: "Wait 120 seconds"
+      wait_for_connection:
+        timeout: 120
+    
+    - name: "Update apt packages"
+      become: true
+      apt:
+        update_cache: yes
+
+    - name: "Install Nginx"
+      become: true
+      apt:
+        name: nginx
+        state: present
+
+    - name: Restart and enable Nginx service
+      become: true
+      service:
+        name: nginx
+        state: restarted
+        enabled: true
+    
+    - name: Check 80 port
+      wait_for:
+        port: "80"
+        delay: 10

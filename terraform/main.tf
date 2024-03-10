@@ -111,7 +111,7 @@ resource "yandex_compute_instance" "nginx-vm-2" {
 }
 
 #===prometheus===
-resource "yandex_compute_disk" "prometheus-bd" {
+/*resource "yandex_compute_disk" "prometheus-bd" {
   name     = "prometheus-boot-disk"
   zone     = var.zone-a
   image_id = var.ubuntu-id
@@ -298,7 +298,7 @@ resource "yandex_compute_instance" "bastion-vm" {
   scheduling_policy {
     preemptible = var.preemptible
   }
-}
+}*/
 
 #===ansible info====
 resource "local_file" "write_hosts" {
@@ -306,7 +306,11 @@ resource "local_file" "write_hosts" {
 [nginx]
 nginx-1 ansible_host=${yandex_compute_instance.nginx-vm-1.network_interface.0.nat_ip_address}
 nginx-2 ansible_host=${yandex_compute_instance.nginx-vm-2.network_interface.0.nat_ip_address}
+EOT
+  filename = "../ansible/hosts"
+}
 
+/*
 [prometheus]
 ${yandex_compute_instance.prometheus-vm.network_interface.0.nat_ip_address}
 
@@ -321,7 +325,5 @@ ${yandex_compute_instance.kibana-vm.network_interface.0.nat_ip_address}
 
 [bastion-host]
 ${yandex_compute_instance.bastion-vm.network_interface.0.nat_ip_address}
-EOT
-  filename = "../ansible/hosts"
-}
+*/
 
