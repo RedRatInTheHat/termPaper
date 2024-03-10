@@ -110,6 +110,8 @@ resource "yandex_compute_instance" "nginx-vm-2" {
   }
 }
 
+#===web servers balancer===
+
 resource "yandex_alb_target_group" "nginx-tg" {
   name           = "nginx-target-group"
 
@@ -123,6 +125,30 @@ resource "yandex_alb_target_group" "nginx-tg" {
     ip_address   = yandex_compute_instance.nginx-vm-2.network_interface.0.ip_address
   }
 }
+
+resource "yandex_alb_backend_group" "nginx-bg" {
+  name                     = "nginx-backend-group"
+
+  http_backend {
+    name                   = "nginx-backend"
+    weight                 = 1
+    port                   = 80
+    target_group_ids       = [yandex_alb_target_group.nginx-tg.id]
+    load_balancing_config {
+      panic_threshold      = 90
+    }    
+    healthcheck {
+      timeout              = "10s"
+      interval             = "2s"
+      healthy_threshold    = 10
+      unhealthy_threshold  = 15 
+      http_healthcheck {
+        path               = "/"
+      }
+    }
+  }
+}
+
 
 #===prometheus===
 /*resource "yandex_compute_disk" "prometheus-bd" {
