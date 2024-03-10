@@ -149,6 +149,52 @@ resource "yandex_alb_backend_group" "nginx-bg" {
   }
 }
 
+resource "yandex_alb_http_router" "nginx-router" {
+  name          = "nginx-http-router"
+}
+
+resource "yandex_alb_virtual_host" "nginx-vh" {
+  name                    = "nginx-virtual-host"
+  http_router_id          = yandex_alb_http_router.nginx-router.id
+  route {
+    name                  = "nginx-route"
+    http_route {
+      http_route_action {
+        backend_group_id  = yandex_alb_backend_group.nginx-bg.id
+        timeout           = "60s"
+      }
+    }
+  }
+}
+
+resource "yandex_alb_load_balancer" "nginx-balancer" {
+  name        = "nginx-balancer"
+  network_id  = yandex_vpc_network.network.id
+
+  allocation_policy {
+    location {
+      zone_id   = var.zone-a
+      subnet_id = yandex_vpc_subnet.subnet-1.id 
+    }
+  }
+
+  listener {
+    name = "nginx-listener"
+    endpoint {
+      address {
+        external_ipv4_address {
+        }
+      }
+      ports = [ 80 ]
+    }
+    http {
+      handler {
+        http_router_id = yandex_alb_http_router.nginx-router.id
+      }
+    }
+  }
+}
+
 
 #===prometheus===
 /*resource "yandex_compute_disk" "prometheus-bd" {
