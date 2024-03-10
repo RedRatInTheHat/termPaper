@@ -112,7 +112,7 @@ resource "yandex_compute_instance" "nginx-vm-2" {
 
 #===web servers balancer===
 
-resource "yandex_alb_target_group" "nginx-tg" {
+/*resource "yandex_alb_target_group" "nginx-tg" {
   name           = "nginx-target-group"
 
   target {
@@ -193,7 +193,7 @@ resource "yandex_alb_load_balancer" "nginx-balancer" {
       }
     }
   }
-}
+}*/
 
 
 #===prometheus===

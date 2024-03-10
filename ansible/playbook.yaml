@@ -1,6 +1,7 @@
 ---
 - name: Create Nginx server
-  hosts: nginx
+  hosts: nginx-1
   roles:
     - initialisation
-    - nginx
+    #- nginx
+    - node-exporter

@@ -1,0 +1,59 @@
+---
+- name: "Create group {{ node_exporter_group }}"
+  become: true
+  group:
+    name: "{{ node_exporter_group }}"
+    state: present
+
+- name: "Add user {{ node_exporter_user }}"
+  become: true
+  ansible.builtin.user:
+    name: "{{ node_exporter_user }}"
+    group: "{{ node_exporter_group }}"
+
+- name: Get Node Exporter archive
+  get_url:
+    url: "https://github.com/prometheus/node_exporter/releases/download/v{{ node_exporter_version }}/node_exporter-{{ node_exporter_version }}.linux-amd64.tar.gz"
+    dest: /tmp/node_exporter.tar.gz
+
+- name: Extract Node Exporter archive
+  unarchive:
+    src: /tmp/node_exporter.tar.gz
+    dest: /tmp
+    remote_src: yes
+
+- name: Make sure Node Exporter dir exists
+  become: true
+  file:
+    path: /etc/node-exporter
+    state: directory
+    owner: "{{ node_exporter_user }}"
+    group: "{{ node_exporter_group }}"
+
+- name: Copy node-exporter to etc
+  become: true
+  copy:
+    src: /tmp/node_exporter-{{ node_exporter_version }}.linux-amd64/node_exporter
+    dest: /etc/node-exporter/node_exporter
+    owner: "{{ node_exporter_user }}"
+    group: "{{ node_exporter_group }}"
+    mode: '0755'
+    remote_src: yes
+
+- name: Add node-exporter.service file
+  become: true
+  template:
+    src: node-exporter.service.j2
+    dest: /etc/systemd/system/node-exporter.service
+
+- name: Restart and enable Node Exporter service
+  become: true
+  service:
+    name: node-exporter.service
+    state: restarted
+    enabled: true
+
+
+
+  
+
