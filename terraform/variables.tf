@@ -35,3 +35,17 @@ variable "folder_id" {
   type = string
 }
 
+variable "nginx_1_ip" {
+  type = string
+  default = "192.168.10.10"
+}
+
+variable "nginx_2_ip" {
+  type = string
+  default = "192.168.20.10"
+}
+
+variable "prometheus_ip" {
+  type = string
+  default = "192.168.10.11"
+}
