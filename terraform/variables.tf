@@ -49,3 +49,8 @@ variable "prometheus_ip" {
   type = string
   default = "192.168.10.11"
 }
+
+variable "grafana_ip" {
+  type = string
+  default = "192.168.10.12"
+}

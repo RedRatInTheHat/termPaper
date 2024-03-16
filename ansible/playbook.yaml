@@ -16,3 +16,11 @@
   roles:
     - initialisation
     - prometheus
+
+- name: Create Grafana server
+  hosts: grafana
+  tags:
+    - grafana
+  roles:
+    - initialisation
+    - grafana

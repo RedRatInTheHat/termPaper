@@ -1,0 +1,32 @@
+---
+- name: Install required packages
+  become: true
+  apt:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - adduser
+    - libfontconfig1
+    - musl
+
+- name: Get Grafana .deb
+  get_url:
+    url: "https://dl.grafana.com/oss/release/grafana_{{ grafana_version }}_amd64.deb"
+    dest: /tmp/grafana.deb
+
+- name: Install Grafana
+  become: true
+  apt:
+    deb: /tmp/grafana.deb
+
+- name: Restart and enable Grafana service
+  become: true
+  service:
+    name: grafana-server.service
+    state: restarted
+    enabled: true
+
+- name: Check 3000 port
+  wait_for:
+    port: "3000"
+    delay: 10
