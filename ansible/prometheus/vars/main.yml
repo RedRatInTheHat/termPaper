@@ -1,0 +1,5 @@
+---
+prometheus_version: "2.50.1"
+
+prometheus_user: "prometheus"
+prometheus_group: "prometheus"
