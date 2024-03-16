@@ -36,7 +36,7 @@ resource "yandex_vpc_subnet" "subnet-2" {
 
 #=====vm======
 #====nginx====
-/*resource "yandex_compute_disk" "nginx-bd-1" {
+resource "yandex_compute_disk" "nginx-bd-1" {
   name     = "nginx-boot-disk-1"
   zone     = var.zone-a
   image_id = var.ubuntu-id
@@ -110,7 +110,7 @@ resource "yandex_compute_instance" "nginx-vm-2" {
   scheduling_policy {
     preemptible = var.preemptible
   }
-}*/
+}
 
 #===web servers balancer===
 
@@ -199,7 +199,7 @@ resource "yandex_alb_load_balancer" "nginx-balancer" {
 
 
 #===prometheus===
-/*resource "yandex_compute_disk" "prometheus-bd" {
+resource "yandex_compute_disk" "prometheus-bd" {
   name     = "prometheus-boot-disk"
   zone     = var.zone-a
   image_id = var.ubuntu-id
@@ -235,7 +235,7 @@ resource "yandex_compute_instance" "prometheus-vm" {
   scheduling_policy {
     preemptible = var.preemptible
   }
-}*/
+}
 
 #===grafana===
 resource "yandex_compute_disk" "grafana-bd" {
@@ -393,6 +393,13 @@ resource "yandex_compute_instance" "bastion-vm" {
 #===ansible info====
 resource "local_file" "ansible_hosts" {
   content  = <<EOT
+[nginx]
+nginx-1 ansible_host=${yandex_compute_instance.nginx-vm-1.network_interface.0.nat_ip_address}
+nginx-2 ansible_host=${yandex_compute_instance.nginx-vm-2.network_interface.0.nat_ip_address}
+
+[prometheus]
+${yandex_compute_instance.prometheus-vm.network_interface.0.nat_ip_address}
+
 [grafana]
 ${yandex_compute_instance.grafana-vm.network_interface.0.nat_ip_address}
 EOT
@@ -400,12 +407,6 @@ EOT
 }
 
 /*
-[nginx]
-nginx-1 ansible_host=${yandex_compute_instance.nginx-vm-1.network_interface.0.nat_ip_address}
-nginx-2 ansible_host=${yandex_compute_instance.nginx-vm-2.network_interface.0.nat_ip_address}
-
-[prometheus]
-${yandex_compute_instance.prometheus-vm.network_interface.0.nat_ip_address}
 
 [elasticsearch]
 ${yandex_compute_instance.elastic-vm.network_interface.0.nat_ip_address}

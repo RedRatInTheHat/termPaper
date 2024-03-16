@@ -1,4 +1,7 @@
 ---
+- name: Include secret variables
+  include_vars: secret.yml
+
 - name: Install required packages
   become: true
   apt:
@@ -19,6 +22,13 @@
   apt:
     deb: /tmp/grafana.deb
 
+- name: Change default admin password
+  become: true
+  ansible.builtin.lineinfile:
+    path: /usr/share/grafana/conf/defaults.ini
+    search_string: 'admin_password = admin'
+    line: 'admin_password = {{ grafana_admin_password }}'
+
 - name: Restart and enable Grafana service
   become: true
   service:
@@ -30,3 +40,13 @@
   wait_for:
     port: "3000"
     delay: 10
+
+- name: Create prometheus datasource
+  community.grafana.grafana_datasource:
+    url: "http://{{ ansible_ssh_host }}:3000"
+    grafana_user: admin
+    grafana_password: "{{ grafana_admin_password }}"
+    name: local_prometheus
+    ds_type: prometheus
+    ds_url: "http://{{ prometheus_ip }}:9090"
+    tls_skip_verify: true
