@@ -3,3 +3,6 @@ prometheus_version: "2.50.1"
 
 prometheus_user: "prometheus"
 prometheus_group: "prometheus"
+
+nginx_1_ip: "192.168.10.10"
+nginx_2_ip: "192.168.20.10"

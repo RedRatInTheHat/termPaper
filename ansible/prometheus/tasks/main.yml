@@ -66,6 +66,13 @@
     - console_libraries
     - consoles
 
+- name: Add exporters to prometheus.yml
+  become: true
+  ansible.builtin.lineinfile:
+    path: /etc/prometheus/prometheus.yml
+    search_string: '      - targets: ["localhost:9090"]'
+    line: '      - targets: ["localhost:9090", "{{ nginx_1_ip }}:9100", "{{ nginx_1_ip }}:4040", "{{ nginx_2_ip }}:9100", "{{ nginx_2_ip }}:4040"]'
+
 - name: Add prometheus.service file
   become: true
   template:

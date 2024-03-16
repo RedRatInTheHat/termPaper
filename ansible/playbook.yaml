@@ -1,14 +1,18 @@
 ---
-#- name: Create Nginx server
-#  hosts: nginx
-#  roles:
-#   - initialisation
-#    - nginx
-#    - node-exporter
-#    - nginx-exporter
+- name: Create Nginx server
+  hosts: nginx
+  tags:
+    - nginx
+  roles:
+    - initialisation
+    - nginx
+    - node-exporter
+    - nginx-exporter
 
 - name: Create Prometheus server
   hosts: prometheus
+  tags:
+    - prometheus
   roles:
     - initialisation
     - prometheus
