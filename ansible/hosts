@@ -1,9 +1,0 @@
-[nginx]
-nginx-1 ansible_host=158.160.36.224
-nginx-2 ansible_host=158.160.83.200
-
-[prometheus]
-158.160.108.186
-
-[grafana]
-130.193.39.200

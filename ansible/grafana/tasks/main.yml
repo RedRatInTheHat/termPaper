@@ -1,4 +1,10 @@
 ---
+# - name: Uninstall Grafana
+#   become: true
+#   apt:
+#     name: grafana
+#     state: absent
+
 - name: Include secret variables
   include_vars: secret.yml
 
@@ -41,6 +47,11 @@
     port: "3000"
     delay: 10
 
+- name: Copy custom dashboard
+  copy:
+    src: custom_dashboard.json
+    dest: /tmp/custom_dashboard.json
+
 - name: Create prometheus datasource
   community.grafana.grafana_datasource:
     url: "http://{{ ansible_ssh_host }}:3000"
@@ -50,3 +61,17 @@
     ds_type: prometheus
     ds_url: "http://{{ prometheus_ip }}:9090"
     tls_skip_verify: true
+
+- name: Import Grafana dashboard
+  community.grafana.grafana_dashboard:
+    url: "http://{{ ansible_ssh_host }}:3000"
+    grafana_user: admin
+    grafana_password: "{{ grafana_admin_password }}"
+    validate_certs: false
+    overwrite: true
+    state: present
+    path: /tmp/custom_dashboard.json
+    # dashboard_id: 1860
+    # dashboard_revision: 1
+    # 
+    # state: present
