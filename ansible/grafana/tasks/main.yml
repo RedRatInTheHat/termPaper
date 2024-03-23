@@ -1,10 +1,4 @@
 ---
-# - name: Uninstall Grafana
-#   become: true
-#   apt:
-#     name: grafana
-#     state: absent
-
 - name: Include secret variables
   include_vars: secret.yml
 
@@ -71,7 +65,15 @@
     overwrite: true
     state: present
     path: /tmp/custom_dashboard.json
-    # dashboard_id: 1860
-    # dashboard_revision: 1
-    # 
-    # state: present
+
+- name: Create Grafana guest user
+  community.grafana.grafana_user:
+    url: "http://{{ ansible_ssh_host }}:3000"
+    url_username: admin
+    url_password: "{{ grafana_admin_password }}"
+    name: Guest
+    email: guest@test.test
+    login: guest
+    password: "{{ guest_password }}"
+    is_admin: false
+    state: present
