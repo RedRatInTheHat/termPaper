@@ -15,6 +15,13 @@
   apt:
     deb: /tmp/nginxlog-exporter.deb
 
+- name: Set configuration file to prometheus-nginxlog-exporter
+  become: true
+  copy:
+    src: prometheus-nginxlog-exporter.hcl
+    dest: /etc/prometheus-nginxlog-exporter.hcl
+    mode: "0644"
+
 - name: Ensure that prometheus-nginxlog-exporter.service is started
   become: true
   service:
