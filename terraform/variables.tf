@@ -54,3 +54,8 @@ variable "grafana_ip" {
   type = string
   default = "192.168.10.12"
 }
+
+variable "elasticsearch_ip" {
+  type = string
+  default = "192.168.10.13"
+}
