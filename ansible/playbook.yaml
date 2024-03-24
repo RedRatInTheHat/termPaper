@@ -32,3 +32,4 @@
   roles:
     - initialisation
     - yandex-efk-mirror
+    - elasticsearch
