@@ -24,3 +24,11 @@
   roles:
     - initialisation
     - grafana
+
+- name: Create Elasticsearch server
+  hosts: elasticsearch
+  tags:
+    - elastic
+  roles:
+    - initialisation
+    - yandex-efk-mirror

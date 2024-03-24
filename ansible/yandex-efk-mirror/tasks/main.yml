@@ -1,0 +1,11 @@
+---
+- name: Add yandex repository
+  become: true
+  copy:
+    dest: "/etc/apt/sources.list.d/elastic-{{ elastic_major_version }}.x.list"
+    content: "deb [trusted=yes] https://mirror.yandex.ru/mirrors/elastic/{{ elastic_major_version }}/ stable main"
+
+- name: Update apt packages
+  become: true
+  apt:
+    update_cache: yes
