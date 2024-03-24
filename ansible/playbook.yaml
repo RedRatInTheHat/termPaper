@@ -8,6 +8,8 @@
     - nginx
     - node-exporter
     - nginx-exporter
+    - yandex-efk-mirror
+    - filebeat
 
 - name: Create Prometheus server
   hosts: prometheus
