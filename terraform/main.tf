@@ -114,7 +114,7 @@ resource "yandex_compute_instance" "nginx-vm-2" {
 
 #===web servers balancer===
 
-/*resource "yandex_alb_target_group" "nginx-tg" {
+resource "yandex_alb_target_group" "nginx-tg" {
   name           = "nginx-target-group"
 
   target {
@@ -195,11 +195,11 @@ resource "yandex_alb_load_balancer" "nginx-balancer" {
       }
     }
   }
-}*/
+}
 
 
 #===prometheus===
-/*resource "yandex_compute_disk" "prometheus-bd" {
+resource "yandex_compute_disk" "prometheus-bd" {
   name     = "prometheus-boot-disk"
   zone     = var.zone-a
   image_id = var.ubuntu-id
@@ -274,7 +274,7 @@ resource "yandex_compute_instance" "grafana-vm" {
   scheduling_policy {
     preemptible = var.preemptible
   }
-}*/
+}
 
 #===elasticsearch===
 resource "yandex_compute_disk" "elastic-bd" {
@@ -341,6 +341,7 @@ resource "yandex_compute_instance" "kibana-vm" {
 
   network_interface {
     subnet_id = yandex_vpc_subnet.subnet-1.id
+    ip_address = "${var.kibana_ip}"
     nat       = true
   }
 
@@ -403,19 +404,29 @@ ${yandex_compute_instance.elastic-vm.network_interface.0.nat_ip_address}
 
 [kibana]
 ${yandex_compute_instance.kibana-vm.network_interface.0.nat_ip_address}
-EOT
-  filename = "../ansible/hosts"
-}
-
-/*
-
 
 [prometheus]
 ${yandex_compute_instance.prometheus-vm.network_interface.0.nat_ip_address}
 
 [grafana]
 ${yandex_compute_instance.grafana-vm.network_interface.0.nat_ip_address}
+EOT
+  filename = "../ansible/hosts"
+}
 
+resource "local_file" "tf_variables" {
+  content  = <<EOT
+nginx_1_ip: "${ var.nginx_1_ip }"
+nginx_2_ip: "${ var.nginx_2_ip }"
+prometheus_ip: "${ var.prometheus_ip }"
+grafana_ip: "${ var.grafana_ip }"
+elasticsearch_ip: "${ var.elasticsearch_ip }"
+kibana_ip: "${ var.kibana_ip }"
+EOT
+  filename = "../ansible/group_vars/all/tf_variables.yml"
+}
+
+/*
 [bastion-host]
 ${yandex_compute_instance.bastion-vm.network_interface.0.nat_ip_address}
 */

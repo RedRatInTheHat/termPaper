@@ -59,3 +59,8 @@ variable "elasticsearch_ip" {
   type = string
   default = "192.168.10.13"
 }
+
+variable "kibana_ip" {
+  type = string
+  default = "192.168.10.14"
+}
