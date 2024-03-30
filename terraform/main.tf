@@ -427,6 +427,7 @@ EOT
 }
 
 /*
+
 [bastion-host]
 ${yandex_compute_instance.bastion-vm.network_interface.0.nat_ip_address}
 */
@@ -434,7 +435,7 @@ ${yandex_compute_instance.bastion-vm.network_interface.0.nat_ip_address}
 
 resource "null_resource" "ansible" {
   provisioner "local-exec" {
-    command = "cd ../ansible && ansible-playbook ../ansible/playbook.yaml"
+    command = "cd ../ansible && ansible-playbook playbook.yaml"
   }
 
   depends_on = [
