@@ -442,3 +442,31 @@ resource "null_resource" "ansible" {
     local_file.ansible_hosts
   ]
 }
+
+output "nginx_1" {
+  value = yandex_compute_instance.nginx-vm-1.network_interface.0.nat_ip_address
+}
+
+output "nginx_2" {
+  value = yandex_compute_instance.nginx-vm-2.network_interface.0.nat_ip_address
+}
+
+output "balancer" {
+  value = yandex_alb_load_balancer.nginx-balancer.listener.0.endpoint.0.address.0.external_ipv4_address.0.address
+}
+
+output "prometheus" {
+  value = yandex_compute_instance.prometheus-vm.network_interface.0.nat_ip_address
+}
+
+output "grafana" {
+  value = yandex_compute_instance.grafana-vm.network_interface.0.nat_ip_address
+}
+
+output "elasticsearch" {
+  value = yandex_compute_instance.elastic-vm.network_interface.0.nat_ip_address
+}
+
+output "kibana" {
+  value = yandex_compute_instance.kibana-vm.network_interface.0.nat_ip_address
+}
