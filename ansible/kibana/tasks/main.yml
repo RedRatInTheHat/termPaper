@@ -1,18 +1,33 @@
 ---
-- name: Install Kibana
-  become: true
-  apt:
-    name: kibana
-    state: present
+# - name: Install Kibana
+#   become: true
+#   apt:
+#     name: kibana
+#     state: present
 
-- name: Restart and enable Kibana service
-  become: true
-  service:
-    name: kibana
-    state: restarted
-    enabled: true
+# - name: Copy kibana configuration
+#   become: true
+#   template:
+#     src: kibana.yml
+#     dest: /etc/kibana/kibana.yml
 
-- name: Check 5601 port
-  wait_for:
-    port: 5601
-    delay: 10
+# - name: Restart and enable Kibana service
+#   become: true
+#   service:
+#     name: kibana
+#     state: restarted
+#     enabled: true
+
+# - name: Check 5601 port
+#   wait_for:
+#     port: 5601
+#     delay: 30
+
+- name: Create basic data view
+  uri:
+    url: http://localhost:5601/api/data_views/data_view
+    method: POST
+    body: { "data_view": { "title":"filebeat*", "name":"Filebeat" }, "override": true }
+    body_format: json
+    headers:
+      kbn-xsrf: true
