@@ -37,3 +37,4 @@ terraform.rc
 .terraform*
 terraform/meta.yml
 secret.yml
+.ssh/*
