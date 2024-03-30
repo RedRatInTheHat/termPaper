@@ -199,7 +199,7 @@ resource "yandex_alb_load_balancer" "nginx-balancer" {
 
 
 #===prometheus===
-resource "yandex_compute_disk" "prometheus-bd" {
+/*resource "yandex_compute_disk" "prometheus-bd" {
   name     = "prometheus-boot-disk"
   zone     = var.zone-a
   image_id = var.ubuntu-id
@@ -274,10 +274,10 @@ resource "yandex_compute_instance" "grafana-vm" {
   scheduling_policy {
     preemptible = var.preemptible
   }
-}
+}*/
 
 #===elasticsearch===
-/*resource "yandex_compute_disk" "elastic-bd" {
+resource "yandex_compute_disk" "elastic-bd" {
   name     = "elastic-boot-disk"
   zone     = var.zone-a
   image_id = var.ubuntu-id
@@ -293,7 +293,7 @@ resource "yandex_compute_instance" "elastic-vm" {
   resources {
     core_fraction = 20
     cores         = 2
-    memory        = 2
+    memory        = 8
   }
 
   boot_disk {
@@ -302,6 +302,7 @@ resource "yandex_compute_instance" "elastic-vm" {
 
   network_interface {
     subnet_id = yandex_vpc_subnet.subnet-1.id
+    ip_address = "${var.elasticsearch_ip}"
     nat       = true
   }
 
@@ -315,7 +316,7 @@ resource "yandex_compute_instance" "elastic-vm" {
 }
 
 #===kibana===
-resource "yandex_compute_disk" "kibana-bd" {
+/*resource "yandex_compute_disk" "kibana-bd" {
   name     = "kibana-boot-disk"
   zone     = var.zone-a
   image_id = var.ubuntu-id
@@ -397,19 +398,20 @@ resource "local_file" "ansible_hosts" {
 nginx-1 ansible_host=${yandex_compute_instance.nginx-vm-1.network_interface.0.nat_ip_address}
 nginx-2 ansible_host=${yandex_compute_instance.nginx-vm-2.network_interface.0.nat_ip_address}
 
-[prometheus]
-${yandex_compute_instance.prometheus-vm.network_interface.0.nat_ip_address}
-
-[grafana]
-${yandex_compute_instance.grafana-vm.network_interface.0.nat_ip_address}
+[elasticsearch]
+${yandex_compute_instance.elastic-vm.network_interface.0.nat_ip_address}
 EOT
   filename = "../ansible/hosts"
 }
 
 /*
 
-[elasticsearch]
-${yandex_compute_instance.elastic-vm.network_interface.0.nat_ip_address}
+
+[prometheus]
+${yandex_compute_instance.prometheus-vm.network_interface.0.nat_ip_address}
+
+[grafana]
+${yandex_compute_instance.grafana-vm.network_interface.0.nat_ip_address}
 
 [kibana]
 ${yandex_compute_instance.kibana-vm.network_interface.0.nat_ip_address}
