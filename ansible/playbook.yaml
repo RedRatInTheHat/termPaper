@@ -35,3 +35,12 @@
     - initialisation
     - yandex-efk-mirror
     - elasticsearch
+
+- name: Create Kibana server
+  hosts: kibana
+  tags:
+    - kibana
+  roles:
+    - initialisation
+    - yandex-efk-mirror
+    - kibana

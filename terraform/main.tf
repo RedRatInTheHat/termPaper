@@ -316,7 +316,7 @@ resource "yandex_compute_instance" "elastic-vm" {
 }
 
 #===kibana===
-/*resource "yandex_compute_disk" "kibana-bd" {
+resource "yandex_compute_disk" "kibana-bd" {
   name     = "kibana-boot-disk"
   zone     = var.zone-a
   image_id = var.ubuntu-id
@@ -332,7 +332,7 @@ resource "yandex_compute_instance" "kibana-vm" {
   resources {
     core_fraction = 20
     cores         = 2
-    memory        = 2
+    memory        = 8
   }
 
   boot_disk {
@@ -354,7 +354,7 @@ resource "yandex_compute_instance" "kibana-vm" {
 }
 
 #===bastion host===
-resource "yandex_compute_disk" "bastion-bd" {
+/*resource "yandex_compute_disk" "bastion-bd" {
   name     = "bastion-boot-disk"
   zone     = var.zone-a
   image_id = var.ubuntu-id
@@ -400,6 +400,9 @@ nginx-2 ansible_host=${yandex_compute_instance.nginx-vm-2.network_interface.0.na
 
 [elasticsearch]
 ${yandex_compute_instance.elastic-vm.network_interface.0.nat_ip_address}
+
+[kibana]
+${yandex_compute_instance.kibana-vm.network_interface.0.nat_ip_address}
 EOT
   filename = "../ansible/hosts"
 }
@@ -412,9 +415,6 @@ ${yandex_compute_instance.prometheus-vm.network_interface.0.nat_ip_address}
 
 [grafana]
 ${yandex_compute_instance.grafana-vm.network_interface.0.nat_ip_address}
-
-[kibana]
-${yandex_compute_instance.kibana-vm.network_interface.0.nat_ip_address}
 
 [bastion-host]
 ${yandex_compute_instance.bastion-vm.network_interface.0.nat_ip_address}
