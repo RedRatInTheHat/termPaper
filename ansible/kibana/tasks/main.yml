@@ -1,27 +1,27 @@
 ---
-# - name: Install Kibana
-#   become: true
-#   apt:
-#     name: kibana
-#     state: present
+- name: Install Kibana
+  become: true
+  apt:
+    name: kibana
+    state: present
 
-# - name: Copy kibana configuration
-#   become: true
-#   template:
-#     src: kibana.yml
-#     dest: /etc/kibana/kibana.yml
+- name: Copy kibana configuration
+  become: true
+  template:
+    src: kibana.yml
+    dest: /etc/kibana/kibana.yml
 
-# - name: Restart and enable Kibana service
-#   become: true
-#   service:
-#     name: kibana
-#     state: restarted
-#     enabled: true
+- name: Restart and enable Kibana service
+  become: true
+  service:
+    name: kibana
+    state: restarted
+    enabled: true
 
-# - name: Check 5601 port
-#   wait_for:
-#     port: 5601
-#     delay: 30
+- name: Check 5601 port
+  wait_for:
+    port: 5601
+    delay: 30
 
 - name: Create basic data view
   uri:
