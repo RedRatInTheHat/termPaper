@@ -74,7 +74,7 @@ resource "yandex_compute_instance" "nginx-vm-1" {
   }
 }
 
-resource "yandex_compute_disk" "nginx-bd-2" {
+/*resource "yandex_compute_disk" "nginx-bd-2" {
   name     = "nginx-boot-disk-2"
   zone     = var.zone-b
   image_id = var.ubuntu-id
@@ -352,10 +352,10 @@ resource "yandex_compute_instance" "kibana-vm" {
   scheduling_policy {
     preemptible = var.preemptible
   }
-}
+}*/
 
 #===bastion host===
-/*resource "yandex_compute_disk" "bastion-bd" {
+resource "yandex_compute_disk" "bastion-bd" {
   name     = "bastion-boot-disk"
   zone     = var.zone-a
   image_id = var.ubuntu-id
@@ -390,13 +390,34 @@ resource "yandex_compute_instance" "bastion-vm" {
   scheduling_policy {
     preemptible = var.preemptible
   }
-}*/
+}
 
 #===ansible info====
 resource "local_file" "ansible_hosts" {
   content  = <<EOT
 [nginx]
 nginx-1 ansible_host=${yandex_compute_instance.nginx-vm-1.network_interface.0.nat_ip_address}
+
+[bastion-host]
+${yandex_compute_instance.bastion-vm.network_interface.0.nat_ip_address}
+EOT
+  filename = "../ansible/hosts"
+}
+
+resource "local_file" "tf_variables" {
+  content  = <<EOT
+nginx_1_ip: "${ var.nginx_1_ip }"
+nginx_2_ip: "${ var.nginx_2_ip }"
+prometheus_ip: "${ var.prometheus_ip }"
+grafana_ip: "${ var.grafana_ip }"
+elasticsearch_ip: "${ var.elasticsearch_ip }"
+kibana_ip: "${ var.kibana_ip }"
+bastion_ip: "${ var.bastion_ip}"
+EOT
+  filename = "../ansible/group_vars/all/tf_variables.yml"
+}
+
+/*
 nginx-2 ansible_host=${yandex_compute_instance.nginx-vm-2.network_interface.0.nat_ip_address}
 
 [elasticsearch]
@@ -410,26 +431,7 @@ ${yandex_compute_instance.prometheus-vm.network_interface.0.nat_ip_address}
 
 [grafana]
 ${yandex_compute_instance.grafana-vm.network_interface.0.nat_ip_address}
-EOT
-  filename = "../ansible/hosts"
-}
 
-resource "local_file" "tf_variables" {
-  content  = <<EOT
-nginx_1_ip: "${ var.nginx_1_ip }"
-nginx_2_ip: "${ var.nginx_2_ip }"
-prometheus_ip: "${ var.prometheus_ip }"
-grafana_ip: "${ var.grafana_ip }"
-elasticsearch_ip: "${ var.elasticsearch_ip }"
-kibana_ip: "${ var.kibana_ip }"
-EOT
-  filename = "../ansible/group_vars/all/tf_variables.yml"
-}
-
-/*
-
-[bastion-host]
-${yandex_compute_instance.bastion-vm.network_interface.0.nat_ip_address}
 */
 
 
@@ -447,7 +449,7 @@ output "nginx_1" {
   value = yandex_compute_instance.nginx-vm-1.network_interface.0.nat_ip_address
 }
 
-output "nginx_2" {
+/*output "nginx_2" {
   value = yandex_compute_instance.nginx-vm-2.network_interface.0.nat_ip_address
 }
 
@@ -469,4 +471,8 @@ output "elasticsearch" {
 
 output "kibana" {
   value = yandex_compute_instance.kibana-vm.network_interface.0.nat_ip_address
+}*/
+
+output "bastion" {
+  value = yandex_compute_instance.bastion-vm.network_interface.0.nat_ip_address
 }

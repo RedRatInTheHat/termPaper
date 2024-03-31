@@ -64,3 +64,8 @@ variable "kibana_ip" {
   type = string
   default = "192.168.10.14"
 }
+
+variable "bastion_ip" {
+  type = string
+  default = "192.168.10.15"
+}

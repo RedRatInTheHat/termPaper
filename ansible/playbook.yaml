@@ -1,4 +1,11 @@
 ---
+- name: Create bastion host
+  hosts: bastion-host
+  tags:
+    - bastion
+  roles:
+    - initialisation
+
 - name: Create Nginx server
   hosts: nginx
   tags:
