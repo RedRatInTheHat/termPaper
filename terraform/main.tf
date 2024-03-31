@@ -74,7 +74,7 @@ resource "yandex_compute_instance" "nginx-vm-1" {
   }
 }
 
-/*resource "yandex_compute_disk" "nginx-bd-2" {
+resource "yandex_compute_disk" "nginx-bd-2" {
   name     = "nginx-boot-disk-2"
   zone     = var.zone-b
   image_id = var.ubuntu-id
@@ -352,7 +352,7 @@ resource "yandex_compute_instance" "kibana-vm" {
   scheduling_policy {
     preemptible = var.preemptible
   }
-}*/
+}
 
 #===bastion host===
 resource "yandex_compute_disk" "bastion-bd" {
@@ -400,26 +400,26 @@ ${yandex_compute_instance.bastion-vm.network_interface.0.nat_ip_address}
 
 [nginx]
 nginx-1 ansible_host=${ var.nginx_1_ip }
-# nginx-2 ansible_host=${ var.nginx_2_ip }
+nginx-2 ansible_host=${ var.nginx_2_ip }
 
-# [prometheus]
-# ${ var.prometheus_ip }
+[prometheus]
+${ var.prometheus_ip }
 
-# [grafana]
-# ${ var.grafana_ip }
+[grafana]
+${ var.grafana_ip }
 
-# [elasticsearch]
-# ${ var.elasticsearch_ip }
+[elasticsearch]
+${ var.elasticsearch_ip }
 
-# [kibana]
-# ${ var.kibana_ip }
+[kibana]
+${ var.kibana_ip }
 
 [bastioners:children]
 nginx
-# prometheus
-# grafana
-# elasticsearch
-# kibana
+prometheus
+grafana
+elasticsearch
+kibana
 
 [bastioners:vars]
 ansible_ssh_common_args='-o ProxyCommand="ssh -W %h:%p -q ansibler@${ yandex_compute_instance.bastion-vm.network_interface.0.nat_ip_address } -i ../.ssh/terraform"'
@@ -456,7 +456,7 @@ output "nginx_1" {
   value = yandex_compute_instance.nginx-vm-1.network_interface.0.nat_ip_address
 }
 
-/*output "nginx_2" {
+output "nginx_2" {
   value = yandex_compute_instance.nginx-vm-2.network_interface.0.nat_ip_address
 }
 
@@ -478,7 +478,7 @@ output "elasticsearch" {
 
 output "kibana" {
   value = yandex_compute_instance.kibana-vm.network_interface.0.nat_ip_address
-}*/
+}
 
 output "bastion" {
   value = yandex_compute_instance.bastion-vm.network_interface.0.nat_ip_address
