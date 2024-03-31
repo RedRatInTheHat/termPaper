@@ -395,11 +395,35 @@ resource "yandex_compute_instance" "bastion-vm" {
 #===ansible info====
 resource "local_file" "ansible_hosts" {
   content  = <<EOT
-[nginx]
-nginx-1 ansible_host=${yandex_compute_instance.nginx-vm-1.network_interface.0.nat_ip_address}
-
 [bastion-host]
 ${yandex_compute_instance.bastion-vm.network_interface.0.nat_ip_address}
+
+[nginx]
+nginx-1 ansible_host=${ var.nginx_1_ip }
+# nginx-2 ansible_host=${ var.nginx_2_ip }
+
+# [prometheus]
+# ${ var.prometheus_ip }
+
+# [grafana]
+# ${ var.grafana_ip }
+
+# [elasticsearch]
+# ${ var.elasticsearch_ip }
+
+# [kibana]
+# ${ var.kibana_ip }
+
+[bastioners:children]
+nginx
+# prometheus
+# grafana
+# elasticsearch
+# kibana
+
+[bastioners:vars]
+ansible_ssh_common_args='-o ProxyCommand="ssh -W %h:%p -q ansibler@${ yandex_compute_instance.bastion-vm.network_interface.0.nat_ip_address } -i ../.ssh/terraform"'
+
 EOT
   filename = "../ansible/hosts"
 }
@@ -416,23 +440,6 @@ bastion_ip: "${ var.bastion_ip}"
 EOT
   filename = "../ansible/group_vars/all/tf_variables.yml"
 }
-
-/*
-nginx-2 ansible_host=${yandex_compute_instance.nginx-vm-2.network_interface.0.nat_ip_address}
-
-[elasticsearch]
-${yandex_compute_instance.elastic-vm.network_interface.0.nat_ip_address}
-
-[kibana]
-${yandex_compute_instance.kibana-vm.network_interface.0.nat_ip_address}
-
-[prometheus]
-${yandex_compute_instance.prometheus-vm.network_interface.0.nat_ip_address}
-
-[grafana]
-${yandex_compute_instance.grafana-vm.network_interface.0.nat_ip_address}
-
-*/
 
 
 resource "null_resource" "ansible" {

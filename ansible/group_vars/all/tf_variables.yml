@@ -1,7 +1,0 @@
-nginx_1_ip: "192.168.10.10"
-nginx_2_ip: "192.168.20.10"
-prometheus_ip: "192.168.10.11"
-grafana_ip: "192.168.10.12"
-elasticsearch_ip: "192.168.10.13"
-kibana_ip: "192.168.10.14"
-bastion_ip: "192.168.10.15"
