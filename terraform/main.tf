@@ -58,6 +58,134 @@ resource "yandex_vpc_subnet" "public-subnet-1" {
   network_id     = yandex_vpc_network.network.id
 }
 
+#===security groups====
+resource "yandex_vpc_security_group" "bastion-sg" {
+  name        = "Bastion security group"
+  description = "Input SSH connection only"
+  network_id  = yandex_vpc_network.network.id
+
+  ingress {
+    protocol       = "TCP"
+    v4_cidr_blocks = ["0.0.0.0/0"]
+    port           = 22
+  }
+
+  egress {
+    description    = "Permit ANY"
+    protocol       = "ANY"
+    v4_cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "yandex_vpc_security_group" "ssh-sg" {
+  name        = "SSH security group"
+  description = "SSH port is available only for bastion; output isn't restricted"
+  network_id  = yandex_vpc_network.network.id
+
+  ingress {
+    protocol       = "TCP"
+    v4_cidr_blocks = ["${var.bastion_ip}/32"]
+    port           = 22
+  }
+
+  egress {
+    description    = "Permit ANY"
+    protocol       = "ANY"
+    v4_cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "yandex_vpc_security_group" "web-sg" {
+  name        = "Nginx servers security group"
+  description = "Add access for balancer and access to 80 port and exporters"
+  network_id  = yandex_vpc_network.network.id
+
+  ingress {
+    description    = "Allow HTTP protocol from anywhere"
+    protocol       = "TCP"
+    port           = 80
+    v4_cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description    = "Allow HTTPs protocol from anywhere"
+    protocol       = "TCP"
+    port           = 443
+    v4_cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "Allow health checks from NLB"
+    protocol = "TCP"
+    predefined_target = "loadbalancer_healthchecks"
+  }
+
+  ingress {
+    protocol       = "TCP"
+    description    = "Give access to prometheus for nginx-exporter"
+    v4_cidr_blocks = ["${var.prometheus_ip}/32"]
+    port           = 4040
+  }
+
+  ingress {
+    protocol       = "TCP"
+    description    = "Give access to prometheus for node-exporter"
+    v4_cidr_blocks = ["${var.prometheus_ip}/32"]
+    port           = 9100
+  }
+}
+
+resource "yandex_vpc_security_group" "prometheus-sg" {
+  name        = "Prometheus security group"
+  description = "Add access to prometheus only for grafana"
+  network_id  = yandex_vpc_network.network.id
+
+  ingress {
+    protocol       = "TCP"
+    description    = "Give access to prometheus for grafana"
+    v4_cidr_blocks = ["${var.grafana_ip}/32"]
+    port           = 9090
+  }
+}
+
+resource "yandex_vpc_security_group" "grafana-sg" {
+  name        = "Grafana security group"
+  description = "Add access to grafana interface"
+  network_id  = yandex_vpc_network.network.id
+
+  ingress {
+    protocol       = "TCP"
+    description    = "Give access to grafana"
+    v4_cidr_blocks = ["0.0.0.0/0"]
+    port           = 3000
+  }
+}
+
+resource "yandex_vpc_security_group" "elasticsearch-sg" {
+  name        = "Elasticsearch security group"
+  description = "Add access to elasticsearch only for kibana and filebeat"
+  network_id  = yandex_vpc_network.network.id
+
+  ingress {
+    protocol       = "TCP"
+    description    = "Give access to elasticsearch for kibana and filebeat"
+    v4_cidr_blocks = ["${var.kibana_ip}/32", "${var.nginx_1_ip}/32", "${var.nginx_2_ip}/32"]
+    port           = 9200
+  }
+}
+
+resource "yandex_vpc_security_group" "kibana-sg" {
+  name        = "Kibana security group"
+  description = "Add access to kibana interface"
+  network_id  = yandex_vpc_network.network.id
+
+  ingress {
+    protocol       = "TCP"
+    description    = "Give access to kibana"
+    v4_cidr_blocks = ["0.0.0.0/0"]
+    port           = 5601
+  }
+}
 
 #=====vm======
 #====nginx====
@@ -88,6 +216,7 @@ resource "yandex_compute_instance" "nginx-vm-1" {
     subnet_id = yandex_vpc_subnet.private-subnet-1.id
     ip_address = "${var.nginx_1_ip}"
     nat       = var.nat_for_private
+    security_group_ids = [ yandex_vpc_security_group.ssh-sg.id, yandex_vpc_security_group.web-sg.id ]
   }
 
   metadata = {
@@ -126,6 +255,7 @@ resource "yandex_compute_instance" "nginx-vm-2" {
     subnet_id = yandex_vpc_subnet.private-subnet-2.id
     ip_address = "${var.nginx_2_ip}"
     nat       = var.nat_for_private
+    security_group_ids = [ yandex_vpc_security_group.ssh-sg.id, yandex_vpc_security_group.web-sg.id ]
   }
 
   metadata = {
@@ -251,6 +381,7 @@ resource "yandex_compute_instance" "prometheus-vm" {
     subnet_id = yandex_vpc_subnet.private-subnet-1.id
     ip_address = "${var.prometheus_ip}"
     nat       = var.nat_for_private
+    security_group_ids = [ yandex_vpc_security_group.ssh-sg.id, yandex_vpc_security_group.prometheus-sg.id ]
   }
 
   metadata = {
@@ -290,6 +421,7 @@ resource "yandex_compute_instance" "grafana-vm" {
     subnet_id = yandex_vpc_subnet.public-subnet-1.id
     ip_address = "${var.grafana_ip}"
     nat       = true
+    security_group_ids = [ yandex_vpc_security_group.ssh-sg.id, yandex_vpc_security_group.grafana-sg.id ]
   }
 
   metadata = {
@@ -329,6 +461,7 @@ resource "yandex_compute_instance" "elastic-vm" {
     subnet_id = yandex_vpc_subnet.private-subnet-1.id
     ip_address = "${var.elasticsearch_ip}"
     nat       = var.nat_for_private
+    security_group_ids = [ yandex_vpc_security_group.ssh-sg.id, yandex_vpc_security_group.elasticsearch-sg.id ]
   }
 
   metadata = {
@@ -368,6 +501,7 @@ resource "yandex_compute_instance" "kibana-vm" {
     subnet_id = yandex_vpc_subnet.public-subnet-1.id
     ip_address = "${var.kibana_ip}"
     nat       = true
+    security_group_ids = [ yandex_vpc_security_group.ssh-sg.id, yandex_vpc_security_group.kibana-sg.id ]
   }
 
   metadata = {
@@ -405,7 +539,9 @@ resource "yandex_compute_instance" "bastion-vm" {
 
   network_interface {
     subnet_id = yandex_vpc_subnet.public-subnet-1.id
+    ip_address = "${var.bastion_ip}"
     nat       = true
+    security_group_ids = [ yandex_vpc_security_group.bastion-sg.id ]
   }
 
   metadata = {
