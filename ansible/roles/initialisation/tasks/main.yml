@@ -3,6 +3,12 @@
   wait_for_connection:
     timeout: 120
 
+- name: Remove apt lock file
+  become: true
+  file:
+    state: absent
+    path: "/var/lib/dpkg/lock"
+
 - name: Update apt packages
   become: true
   apt:
