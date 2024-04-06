@@ -10,26 +10,51 @@ provider "yandex" {
   token     = var.oauth_token
   cloud_id  = var.cloud_id
   folder_id = var.folder_id
-  zone      = var.zone-a
+  zone      = var.zone_a
 }
 
 #===network===
-
 resource "yandex_vpc_network" "network" {
   name = "network1"
 }
 
-resource "yandex_vpc_subnet" "subnet-1" {
-  name           = "subnet1"
-  zone           = var.zone-a
-  v4_cidr_blocks = ["192.168.10.0/24"]
-  network_id     = yandex_vpc_network.network.id
+#====nat=====
+resource "yandex_vpc_gateway" "nat_gateway" {
+  name = "nat"
+  shared_egress_gateway {}
 }
 
-resource "yandex_vpc_subnet" "subnet-2" {
-  name           = "subnet2"
-  zone           = var.zone-b
+resource "yandex_vpc_route_table" "rt" {
+  name       = "route-table"
+  network_id = yandex_vpc_network.network.id
+
+  static_route {
+    destination_prefix = "0.0.0.0/0"
+    gateway_id         = yandex_vpc_gateway.nat_gateway.id
+  }
+}
+
+#=====subnet====
+resource "yandex_vpc_subnet" "private-subnet-1" {
+  name           = "private-subnet1"
+  zone           = var.zone_a
+  v4_cidr_blocks = ["192.168.10.0/24"]
+  network_id     = yandex_vpc_network.network.id
+  route_table_id = yandex_vpc_route_table.rt.id
+}
+
+resource "yandex_vpc_subnet" "private-subnet-2" {
+  name           = "private-subnet2"
+  zone           = var.zone_b
   v4_cidr_blocks = ["192.168.20.0/24"]
+  network_id     = yandex_vpc_network.network.id
+  route_table_id = yandex_vpc_route_table.rt.id
+}
+
+resource "yandex_vpc_subnet" "public-subnet-1" {
+  name           = "public-subnet1"
+  zone           = var.zone_d
+  v4_cidr_blocks = ["192.168.30.0/24"]
   network_id     = yandex_vpc_network.network.id
 }
 
@@ -38,7 +63,7 @@ resource "yandex_vpc_subnet" "subnet-2" {
 #====nginx====
 resource "yandex_compute_disk" "nginx-bd-1" {
   name     = "nginx-boot-disk-1"
-  zone     = var.zone-a
+  zone     = var.zone_a
   image_id = var.ubuntu-id
   size     = 20
 }
@@ -46,7 +71,7 @@ resource "yandex_compute_disk" "nginx-bd-1" {
 resource "yandex_compute_instance" "nginx-vm-1" {
   name                      = "nginx-1"
   allow_stopping_for_update = true
-  zone                      = var.zone-a
+  zone                      = var.zone_a
   platform_id               = "standard-v3"
 
   resources {
@@ -60,9 +85,9 @@ resource "yandex_compute_instance" "nginx-vm-1" {
   }
 
   network_interface {
-    subnet_id = yandex_vpc_subnet.subnet-1.id
+    subnet_id = yandex_vpc_subnet.private-subnet-1.id
     ip_address = "${var.nginx_1_ip}"
-    nat       = true
+    nat       = var.nat_for_private
   }
 
   metadata = {
@@ -76,7 +101,7 @@ resource "yandex_compute_instance" "nginx-vm-1" {
 
 resource "yandex_compute_disk" "nginx-bd-2" {
   name     = "nginx-boot-disk-2"
-  zone     = var.zone-b
+  zone     = var.zone_b
   image_id = var.ubuntu-id
   size     = 20
 }
@@ -84,7 +109,7 @@ resource "yandex_compute_disk" "nginx-bd-2" {
 resource "yandex_compute_instance" "nginx-vm-2" {
   name                      = "nginx-2"
   allow_stopping_for_update = true
-  zone                      = var.zone-b
+  zone                      = var.zone_b
   platform_id               = "standard-v3"
 
   resources {
@@ -98,9 +123,9 @@ resource "yandex_compute_instance" "nginx-vm-2" {
   }
 
   network_interface {
-    subnet_id = yandex_vpc_subnet.subnet-2.id
+    subnet_id = yandex_vpc_subnet.private-subnet-2.id
     ip_address = "${var.nginx_2_ip}"
-    nat       = true
+    nat       = var.nat_for_private
   }
 
   metadata = {
@@ -118,12 +143,12 @@ resource "yandex_alb_target_group" "nginx-tg" {
   name           = "nginx-target-group"
 
   target {
-    subnet_id    = yandex_vpc_subnet.subnet-1.id
+    subnet_id    = yandex_vpc_subnet.private-subnet-1.id
     ip_address   = yandex_compute_instance.nginx-vm-1.network_interface.0.ip_address
   }
 
   target {
-    subnet_id    = yandex_vpc_subnet.subnet-2.id
+    subnet_id    = yandex_vpc_subnet.private-subnet-2.id
     ip_address   = yandex_compute_instance.nginx-vm-2.network_interface.0.ip_address
   }
 }
@@ -175,8 +200,8 @@ resource "yandex_alb_load_balancer" "nginx-balancer" {
 
   allocation_policy {
     location {
-      zone_id   = var.zone-a
-      subnet_id = yandex_vpc_subnet.subnet-1.id 
+      zone_id   = var.zone_d
+      subnet_id = yandex_vpc_subnet.public-subnet-1.id 
     }
   }
 
@@ -201,7 +226,7 @@ resource "yandex_alb_load_balancer" "nginx-balancer" {
 #===prometheus===
 resource "yandex_compute_disk" "prometheus-bd" {
   name     = "prometheus-boot-disk"
-  zone     = var.zone-a
+  zone     = var.zone_a
   image_id = var.ubuntu-id
   size     = 20
 }
@@ -209,7 +234,7 @@ resource "yandex_compute_disk" "prometheus-bd" {
 resource "yandex_compute_instance" "prometheus-vm" {
   name                      = "prometheus"
   allow_stopping_for_update = true
-  zone                      = var.zone-a
+  zone                      = var.zone_a
   platform_id               = "standard-v3"
 
   resources {
@@ -223,9 +248,9 @@ resource "yandex_compute_instance" "prometheus-vm" {
   }
 
   network_interface {
-    subnet_id = yandex_vpc_subnet.subnet-1.id
+    subnet_id = yandex_vpc_subnet.private-subnet-1.id
     ip_address = "${var.prometheus_ip}"
-    nat       = true
+    nat       = var.nat_for_private
   }
 
   metadata = {
@@ -240,7 +265,7 @@ resource "yandex_compute_instance" "prometheus-vm" {
 #===grafana===
 resource "yandex_compute_disk" "grafana-bd" {
   name     = "grafana-boot-disk"
-  zone     = var.zone-a
+  zone     = var.zone_d
   image_id = var.ubuntu-id
   size     = 20
 }
@@ -248,7 +273,7 @@ resource "yandex_compute_disk" "grafana-bd" {
 resource "yandex_compute_instance" "grafana-vm" {
   name                      = "grafana"
   allow_stopping_for_update = true
-  zone                      = var.zone-a
+  zone                      = var.zone_d
   platform_id               = "standard-v3"
 
   resources {
@@ -262,7 +287,7 @@ resource "yandex_compute_instance" "grafana-vm" {
   }
 
   network_interface {
-    subnet_id = yandex_vpc_subnet.subnet-1.id
+    subnet_id = yandex_vpc_subnet.public-subnet-1.id
     ip_address = "${var.grafana_ip}"
     nat       = true
   }
@@ -279,7 +304,7 @@ resource "yandex_compute_instance" "grafana-vm" {
 #===elasticsearch===
 resource "yandex_compute_disk" "elastic-bd" {
   name     = "elastic-boot-disk"
-  zone     = var.zone-a
+  zone     = var.zone_a
   image_id = var.ubuntu-id
   size     = 20
 }
@@ -287,7 +312,7 @@ resource "yandex_compute_disk" "elastic-bd" {
 resource "yandex_compute_instance" "elastic-vm" {
   name                      = "elastic"
   allow_stopping_for_update = true
-  zone                      = var.zone-a
+  zone                      = var.zone_a
   platform_id               = "standard-v3"
 
   resources {
@@ -301,9 +326,9 @@ resource "yandex_compute_instance" "elastic-vm" {
   }
 
   network_interface {
-    subnet_id = yandex_vpc_subnet.subnet-1.id
+    subnet_id = yandex_vpc_subnet.private-subnet-1.id
     ip_address = "${var.elasticsearch_ip}"
-    nat       = true
+    nat       = var.nat_for_private
   }
 
   metadata = {
@@ -318,7 +343,7 @@ resource "yandex_compute_instance" "elastic-vm" {
 #===kibana===
 resource "yandex_compute_disk" "kibana-bd" {
   name     = "kibana-boot-disk"
-  zone     = var.zone-a
+  zone     = var.zone_d
   image_id = var.ubuntu-id
   size     = 20
 }
@@ -326,7 +351,7 @@ resource "yandex_compute_disk" "kibana-bd" {
 resource "yandex_compute_instance" "kibana-vm" {
   name                      = "kibana"
   allow_stopping_for_update = true
-  zone                      = var.zone-a
+  zone                      = var.zone_d
   platform_id               = "standard-v3"
 
   resources {
@@ -340,7 +365,7 @@ resource "yandex_compute_instance" "kibana-vm" {
   }
 
   network_interface {
-    subnet_id = yandex_vpc_subnet.subnet-1.id
+    subnet_id = yandex_vpc_subnet.public-subnet-1.id
     ip_address = "${var.kibana_ip}"
     nat       = true
   }
@@ -357,7 +382,7 @@ resource "yandex_compute_instance" "kibana-vm" {
 #===bastion host===
 resource "yandex_compute_disk" "bastion-bd" {
   name     = "bastion-boot-disk"
-  zone     = var.zone-a
+  zone     = var.zone_d
   image_id = var.ubuntu-id
   size     = 20
 }
@@ -365,7 +390,7 @@ resource "yandex_compute_disk" "bastion-bd" {
 resource "yandex_compute_instance" "bastion-vm" {
   name                      = "bastion"
   allow_stopping_for_update = true
-  zone                      = var.zone-a
+  zone                      = var.zone_d
   platform_id               = "standard-v3"
 
   resources {
@@ -379,7 +404,7 @@ resource "yandex_compute_instance" "bastion-vm" {
   }
 
   network_interface {
-    subnet_id = yandex_vpc_subnet.subnet-1.id
+    subnet_id = yandex_vpc_subnet.public-subnet-1.id
     nat       = true
   }
 
@@ -452,29 +477,29 @@ resource "null_resource" "ansible" {
   ]
 }
 
-output "nginx_1" {
-  value = yandex_compute_instance.nginx-vm-1.network_interface.0.nat_ip_address
-}
+# output "nginx_1" {
+#   value = yandex_compute_instance.nginx-vm-1.network_interface.0.nat_ip_address
+# }
 
-output "nginx_2" {
-  value = yandex_compute_instance.nginx-vm-2.network_interface.0.nat_ip_address
-}
+# output "nginx_2" {
+#   value = yandex_compute_instance.nginx-vm-2.network_interface.0.nat_ip_address
+# }
 
 output "balancer" {
   value = yandex_alb_load_balancer.nginx-balancer.listener.0.endpoint.0.address.0.external_ipv4_address.0.address
 }
 
-output "prometheus" {
-  value = yandex_compute_instance.prometheus-vm.network_interface.0.nat_ip_address
-}
+# output "prometheus" {
+#   value = yandex_compute_instance.prometheus-vm.network_interface.0.nat_ip_address
+# }
 
 output "grafana" {
   value = yandex_compute_instance.grafana-vm.network_interface.0.nat_ip_address
 }
 
-output "elasticsearch" {
-  value = yandex_compute_instance.elastic-vm.network_interface.0.nat_ip_address
-}
+# output "elasticsearch" {
+#   value = yandex_compute_instance.elastic-vm.network_interface.0.nat_ip_address
+# }
 
 output "kibana" {
   value = yandex_compute_instance.kibana-vm.network_interface.0.nat_ip_address

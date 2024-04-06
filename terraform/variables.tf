@@ -1,16 +1,26 @@
-variable "zone-a" {
+variable "zone_a" {
   type    = string
   default = "ru-central1-a"
 }
 
-variable "zone-b" {
+variable "zone_b" {
   type    = string
   default = "ru-central1-b"
+}
+
+variable "zone_d" {
+  type    = string
+  default = "ru-central1-d"
 }
 
 variable "preemptible" {
   type    = bool
   default = true
+}
+
+variable "nat_for_private" {
+  type    = bool
+  default = false
 }
 
 variable "metadata-path" {
@@ -50,22 +60,22 @@ variable "prometheus_ip" {
   default = "192.168.10.11"
 }
 
-variable "grafana_ip" {
+variable "elasticsearch_ip" {
   type = string
   default = "192.168.10.12"
 }
 
-variable "elasticsearch_ip" {
+variable "grafana_ip" {
   type = string
-  default = "192.168.10.13"
+  default = "192.168.30.10"
 }
 
 variable "kibana_ip" {
   type = string
-  default = "192.168.10.14"
+  default = "192.168.30.11"
 }
 
 variable "bastion_ip" {
   type = string
-  default = "192.168.10.15"
+  default = "192.168.30.12"
 }
