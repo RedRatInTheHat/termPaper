@@ -46,36 +46,36 @@ variable "folder_id" {
 }
 
 variable "nginx_1_ip" {
-  type = string
+  type    = string
   default = "192.168.10.10"
 }
 
 variable "nginx_2_ip" {
-  type = string
+  type    = string
   default = "192.168.20.10"
 }
 
 variable "prometheus_ip" {
-  type = string
+  type    = string
   default = "192.168.10.11"
 }
 
 variable "elasticsearch_ip" {
-  type = string
+  type    = string
   default = "192.168.10.12"
 }
 
 variable "grafana_ip" {
-  type = string
+  type    = string
   default = "192.168.30.10"
 }
 
 variable "kibana_ip" {
-  type = string
+  type    = string
   default = "192.168.30.11"
 }
 
 variable "bastion_ip" {
-  type = string
+  type    = string
   default = "192.168.30.12"
 }
