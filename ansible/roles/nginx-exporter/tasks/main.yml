@@ -1,0 +1,35 @@
+---
+- name: Open access to access.log
+  become: true
+  file:
+    path: /var/log/nginx/access.log
+    mode: '0644'
+
+- name: Get Nginx Log Exporter
+  get_url:
+    url: "https://github.com/martin-helmich/prometheus-nginxlog-exporter/releases/download/v{{ nginx_log_exporter_version }}/prometheus-nginxlog-exporter_{{ nginx_log_exporter_version }}_linux_amd64.deb"
+    dest: /tmp/nginxlog-exporter.deb
+
+- name: Install Nginx Log Exporter
+  become: true
+  apt:
+    deb: /tmp/nginxlog-exporter.deb
+
+- name: Set configuration file to prometheus-nginxlog-exporter
+  become: true
+  copy:
+    src: prometheus-nginxlog-exporter.hcl
+    dest: /etc/prometheus-nginxlog-exporter.hcl
+    mode: "0644"
+
+- name: Ensure that prometheus-nginxlog-exporter.service is started
+  become: true
+  service:
+    name: prometheus-nginxlog-exporter.service
+    state: restarted
+    enabled: true
+
+- name: Check 4040 port
+  wait_for:
+    port: 4040
+    delay: 10

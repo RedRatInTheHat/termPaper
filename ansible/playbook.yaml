@@ -1,0 +1,53 @@
+---
+- name: Create bastion host
+  hosts: bastion-host
+  tags:
+    - bastion
+  roles:
+    - initialisation
+
+- name: Create Nginx server
+  hosts: nginx
+  tags:
+    - nginx
+  roles:
+    - initialisation
+    - nginx
+    - node-exporter
+    - nginx-exporter
+    - yandex-efk-mirror
+    - filebeat
+
+- name: Create Prometheus server
+  hosts: prometheus
+  tags:
+    - prometheus
+  roles:
+    - initialisation
+    - prometheus
+
+- name: Create Grafana server
+  hosts: grafana
+  tags:
+    - grafana
+  roles:
+    - initialisation
+    - grafana
+
+- name: Create Elasticsearch server
+  hosts: elasticsearch
+  tags:
+    - elastic
+  roles:
+    - initialisation
+    - yandex-efk-mirror
+    - elasticsearch
+
+- name: Create Kibana server
+  hosts: kibana
+  tags:
+    - kibana
+  roles:
+    - initialisation
+    - yandex-efk-mirror
+    - kibana

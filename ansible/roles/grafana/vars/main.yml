@@ -1,0 +1,4 @@
+---
+grafana_version: "10.4.0"
+
+guest_password: "guest"

@@ -1,0 +1,5 @@
+---
+node_exporter_version: "1.7.0"
+
+node_exporter_user: "noder"
+node_exporter_group: "noder"

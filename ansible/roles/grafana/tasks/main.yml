@@ -1,0 +1,79 @@
+---
+- name: Include secret variables
+  include_vars: secret.yml
+
+- name: Install required packages
+  become: true
+  apt:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - adduser
+    - libfontconfig1
+    - musl
+
+- name: Get Grafana .deb
+  get_url:
+    url: "https://dl.grafana.com/oss/release/grafana_{{ grafana_version }}_amd64.deb"
+    dest: /tmp/grafana.deb
+
+- name: Install Grafana
+  become: true
+  apt:
+    deb: /tmp/grafana.deb
+
+- name: Change default admin password
+  become: true
+  ansible.builtin.lineinfile:
+    path: /usr/share/grafana/conf/defaults.ini
+    search_string: 'admin_password = admin'
+    line: 'admin_password = {{ grafana_admin_password }}'
+
+- name: Restart and enable Grafana service
+  become: true
+  service:
+    name: grafana-server.service
+    state: restarted
+    enabled: true
+
+- name: Check 3000 port
+  wait_for:
+    port: "3000"
+    delay: 10
+
+- name: Copy custom dashboard
+  copy:
+    src: custom_dashboard.json
+    dest: /tmp/custom_dashboard.json
+
+- name: Create prometheus datasource
+  community.grafana.grafana_datasource:
+    url: "http://{{ ansible_ssh_host }}:3000"
+    grafana_user: admin
+    grafana_password: "{{ grafana_admin_password }}"
+    name: local_prometheus
+    ds_type: prometheus
+    ds_url: "http://{{ prometheus_ip }}:9090"
+    tls_skip_verify: true
+
+- name: Import Grafana dashboard
+  community.grafana.grafana_dashboard:
+    url: "http://{{ ansible_ssh_host }}:3000"
+    grafana_user: admin
+    grafana_password: "{{ grafana_admin_password }}"
+    validate_certs: false
+    overwrite: true
+    state: present
+    path: /tmp/custom_dashboard.json
+
+- name: Create Grafana guest user
+  community.grafana.grafana_user:
+    url: "http://{{ ansible_ssh_host }}:3000"
+    url_username: admin
+    url_password: "{{ grafana_admin_password }}"
+    name: Guest
+    email: guest@test.test
+    login: guest
+    password: "{{ guest_password }}"
+    is_admin: false
+    state: present

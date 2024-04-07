@@ -1,0 +1,36 @@
+---
+- name: Install Nginx
+  become: true
+  apt:
+    name: nginx
+    state: present
+
+- name: Copy nginx.conf
+  become: true
+  copy:
+    src: nginx.conf
+    dest: /etc/nginx/nginx.conf
+
+- name: Create directory if doesn't exists
+  become: true
+  file:
+    path: /var/www/default
+    state: directory
+
+- name: Copy index.html
+  become: true
+  copy:
+    src: index.html
+    dest: /var/www/default/index.html
+
+- name: Restart and enable Nginx service
+  become: true
+  service:
+    name: nginx
+    state: restarted
+    enabled: true
+
+- name: Check 80 port
+  wait_for:
+    port: "80"
+    delay: 10

@@ -1,0 +1,24 @@
+---
+- name: Install Elasticsearch
+  become: true
+  apt:
+    name: elasticsearch
+    state: present
+
+- name: Copy elasticsearch configuration
+  become: true
+  copy:
+    src: elasticsearch.yml
+    dest: /etc/elasticsearch/elasticsearch.yml
+
+- name: Restart and enable Elasticsearch service
+  become: true
+  service:
+    name: elasticsearch
+    state: restarted
+    enabled: true
+
+- name: Check 9200 port
+  wait_for:
+    port: "9200"
+    delay: 10
